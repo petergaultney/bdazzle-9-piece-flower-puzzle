@@ -1,8 +1,23 @@
 #!/usr/bin/env python
-from random import shuffle
+"""Provides solutions to the B-Dazzle 9 piece flower puzzle.
+
+Board solutions are provided as an outward clockwise spiral:
+
+3 4 5
+2 1 6
+9 8 7
+
+Each piece is printed as a tuple of (Left, Top, Right, Down) sides.
+
+"""
 from pprint import pprint
-from typing import Tuple, Union, List, Sequence, Iterator
+from typing import Tuple, Union, Sequence, Iterator, List
 from collections import defaultdict
+import argparse
+
+Side = str
+Piece = Tuple[Side, Side, Side, Side]
+Board = List[Piece]
 
 # sides
 PB = 'pink-base'
@@ -14,13 +29,9 @@ WB = 'brown-base'
 YT = 'yellow-top'
 YB = 'yellow-base'
 
-Side = str
-Piece = Tuple[Side, Side, Side, Side]
-
 opposing_sides = { PB: PT, WB: WT, YB: YT, BB: BT }
 for side, opposing_side in dict(opposing_sides).items():
     opposing_sides[opposing_side] = side
-
 
 pieces: Tuple[Piece, ...] = (
     (BT, BB, YB, WB),
@@ -33,7 +44,6 @@ pieces: Tuple[Piece, ...] = (
     (YT, WT, PB, BT),
     (PB, BB, YT, WB),
 )
-
 
 # We choose to represent the board as an order starting with the
 # center piece, then clockwise from the center left piece.
@@ -69,7 +79,6 @@ L = 0
 U = 1
 R = 2
 D = 3
-pdirs = ('L', 'U', 'R', 'D')
 
 
 Direction_of_matching_edge = (
@@ -93,10 +102,6 @@ def piece_rotations(piece: Piece) -> Iterator[Piece]:
     yield tuple([piece[3], piece[0], piece[1], piece[2]])
 
 
-def pspotedge(direction, spot):
-    return pdirs[direction], spot
-
-
 def rot_piece_matches(board: Sequence[Piece], rot_piece: Piece) -> bool:
     needed_spots = board_spot_edges[len(board)]
     for direction_on_rot_piece, needed_spot in enumerate(needed_spots):
@@ -113,7 +118,7 @@ spot_att = defaultdict(int)
 spot_matches = defaultdict(int)
 
 
-def fill_board(board, rem_pieces, emit_solution):
+def fill_board(board: Board, rem_pieces: Sequence[Piece], emit_solution) -> Board:
     global spot_att, spot_matches
     assert len(board) + len(rem_pieces) == 9
     for i, piece in enumerate(rem_pieces):
@@ -131,47 +136,25 @@ def fill_board(board, rem_pieces, emit_solution):
 
 
 def run():
-    global spot_att, spot_matches
     solutions = list()
-    def emit_solution(board):
+    def emit_solution(board: Board):
         solutions.append(board)
     for center_piece in pieces:
-        print('CENTER:', center_piece)
         rem_pieces = [ piece for piece in pieces if piece is not center_piece ]
         assert len(rem_pieces) == 8
         board = fill_board([center_piece], rem_pieces, emit_solution)
-        pprint(spot_att)
-        pprint(spot_matches)
     return solutions
 
 
-def test_board_spot_edges():
-    spot_links = defaultdict(int)
-    for spot in raw_board_spot_edges:
-        for edge in spot:
-            spot_links[edge] += 1
-    assert spot_links[None] == 12
-    assert spot_links[0] == 4
-    assert spot_links[2] == 2
-    assert spot_links[4] == 2
-    assert spot_links[6] == 2
-    assert spot_links[8] == 2
-    assert spot_links[1] == 3
-    assert spot_links[3] == 3
-    assert spot_links[5] == 3
-    assert spot_links[7] == 3
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(__doc__)
+    parser.add_argument('--print-attempts', action='store_true')
+    args = parser.parse_args()
 
+    solutions = run()
 
-test_board_spot_edges()
+    if args.print_attempts:
+        pprint(dict(spot_att))
+        pprint(dict(spot_matches))
 
-
-def test_rot_piece_matches():
-    print('testing\n\n')
-    assert rot_piece_matches(pieces[:3], pieces[3])
-    assert rot_piece_matches(pieces[:2], pieces[2])
-    assert not rot_piece_matches(pieces[:1], pieces[1])
-
-test_rot_piece_matches()
-
-
-pprint(run())
+    pprint(solutions)
