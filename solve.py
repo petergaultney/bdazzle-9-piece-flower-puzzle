@@ -15,6 +15,8 @@ from typing import Tuple, Union, Sequence, Iterator, List
 from collections import defaultdict
 import argparse
 
+from format import format_board
+
 Side = str
 Piece = Tuple[Side, Side, Side, Side]
 Board = List[Piece]
@@ -157,4 +159,6 @@ if __name__ == '__main__':
         pprint(dict(spot_att))
         pprint(dict(spot_matches))
 
-    pprint(solutions)
+    for sol in solutions:
+        print(format_board(sol))
+        print('\n\n')
